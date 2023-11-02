@@ -1,5 +1,6 @@
 ---
 title: "IODS course project"
+author: "Yujing He"
 output:
   html_document:
     theme: cosmo
