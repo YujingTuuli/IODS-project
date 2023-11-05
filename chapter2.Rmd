@@ -1,4 +1,4 @@
-# Insert chapter 2 title here
+# Chapter 2
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -10,4 +10,7 @@
 date()
 ```
 
-Here we go again...
+*Week 1*
+
+Following the detail instruction in "Start me up", I set up the technical platforms needed in this course, including R, RStudio, and GitHub. Following the teacher's instruction, I got the know how to push the updated script to the GitHub. Then I started the learning of R with the book "R for Health Data Science", and the corresponding exercise 1. In this week, I finished the learning of Chapter 1-5 in the book, which was a heavy and time-consuming task, but rewarding! In addition, I read the recommended Part 1 of the textbook "MABS4IODS", and the two webinars on RStudio and GitHub.
+
