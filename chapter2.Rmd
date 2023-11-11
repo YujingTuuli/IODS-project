@@ -1,4 +1,4 @@
-# Chapter 2
+# Chapter 2: Regression and model validation
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -10,7 +10,136 @@
 date()
 ```
 
-*Week 1*
+*Data analysis assignment*
 
-Following the detail instruction in "Start me up", I set up the technical platforms needed in this course, including R, RStudio, and GitHub. Following the teacher's instruction, I got the know how to push the updated script to the GitHub. Then I started the learning of R with the book "R for Health Data Science", and the corresponding exercise 1. In this week, I finished the learning of Chapter 1-5 in the book, which was a heavy and time-consuming task, but rewarding! In addition, I read the recommended Part 1 of the textbook "MABS4IODS", and the two webinars on RStudio and GitHub.
+## 1 Read the data
+Read the students2014 data into R and explore the structure and the dimensions of the data
 
+```{r}
+students2014 <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/learning2014.txt", sep=",", header=TRUE)
+
+dim(students2014)
+
+str(students2014)
+```
+Description: The data set consists of 166 observations of 7 variables. The data present the information of gender, age, attitude, learning points of 166 students, and their responses to the questions related to deep, surface and strategic learning.
+
+## 2 Grapical overview with a plot matrix
+Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them.
+
+```{r fig.height= 6, fig.width=10}
+library(ggplot2)
+library(GGally)
+
+my_lower <- function(data, mapping, ...) {
+  ggplot(data = data, mapping=mapping) +
+    geom_point(..., alpha=1, pch = 21, color ="black") +
+    theme(
+      panel.background = element_rect(fill = "white", color = "black")
+    )
+}
+
+my_diag <- function(data, mapping, ...) {
+  ggplot(data = data, mapping=mapping) +
+    geom_density(..., alpha=0.7,  color ="black") +
+    theme(
+      panel.background = element_rect(fill = "white", color = "black")
+    )
+}
+
+my_discrete <- function(data, mapping, ...) {
+  ggplot(data = data, mapping=mapping) +
+    geom_bar(..., alpha=1,  color ="black") +
+    theme(
+      panel.background = element_rect(fill = "white", color = "black")
+    )
+}
+
+my_upper_combo<- function(data, mapping, ...) {
+  ggplot(data = data, mapping=mapping) +
+    geom_boxplot(...,alpha=1, color ="black") +
+    geom_jitter(...,alpha = 0.5, width = 0.25, size = 1, pch = 21, color = "black")+
+    theme(
+      panel.background = element_rect(fill = "white", color = "black")
+    )
+}
+p <- ggpairs(students2014, 
+             mapping = aes(col = gender, fill = gender, alpha = 0.7), 
+             lower = list(
+               continuous = my_lower,
+               combo = wrap("facethist", bins = 20, color = "black")
+               ),
+             diag = list(
+               continuous = my_diag,
+               discrete =  my_discrete
+             ),
+             upper = list(
+               combo = my_upper_combo,
+               continuous = wrap("cor", color = "black")
+             )
+             
+             #lower = list(combo = wrap("facethist", bins = 20))
+             )+
+  scale_fill_manual(values = c("lightblue", "wheat"))+
+  scale_color_manual(values = c("lightblue", "wheat"))
+  
+
+# Print the plot
+p
+
+# Summaries of the variables in the data
+summary(students2014)
+```
+
+Description: Most of the numeric variables in the data are relatively normally distributed, except for the age which is mostly distributed around twenties. Female are about two times more than males in frequency. Within the variables, attitude towards statistics seems to be most strongly correlated with exam points (r=0.437). 
+
+## 3 Fit a regression model
+Choose three variables as explanatory variables and fit a regression model where exam points is the target (dependent, outcome) variable. Show a summary of the fitted model and comment and interpret the results. Explain and interpret the statistical test related to the model parameters. If an explanatory variable in your model does not have a statistically significant relationship with the target variable, remove the variable from the model and fit the model again without it.
+
+```{r}
+# Choose attitude, stra, and surf as the three explanatory variables because they have highest (absolute) correlation with the target variable exam points, according to the plot matrix.
+model1 <- lm(points ~ attitude + stra + surf, data = students2014)
+
+# Print out the summary of the first model
+summary(model1)
+
+# Remove the unfit variables and new fitted regression model
+model2 <- lm(points ~ attitude, data = students2014)
+
+# Print out the summary of the fitted model
+summary(model2)
+
+```
+
+Description: "Attitude" was the single significant predictor in the model. Other two variables entered model--“stra” and “surf”--had p-values 0.12 and 0.47, respectively. Therefore, the model was re-fitted with "attitude" alone, producing a final model that explains 19.06% (R squared = 0.1906) of the variance of the response (exam points). 
+
+## 4 Interpret the fitted model
+Using a summary of your fitted model, explain the relationship between the chosen explanatory variables and the target variable (interpret the model parameters). Explain and interpret the multiple R-squared of the model.
+
+```{r}
+summary(model2)
+```
+
+Description: The resulting model shows attitude is a meaningful predictor for exam points, specifically:
+
+    - a. With a unit of increase in attitude, the exam will increase by 3.5 points
+    
+    - b. When the effect of attitude is held as none, the average exam points is 11.637. In other words, students would be expected to have 11.637 points in the exam if attitude did not influence at all.
+    
+    - c. The model predicts a fairly small proportion (19%) of change in exam points. In other words, attitude is not a good enough predictor for exam points, even though its role in influencing the results should be recognized. Random error or other factors should have played roles in the exam points. 
+
+## 5 Diagnostic plots
+Produce the following diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage. Explain the assumptions of the model and interpret the validity of those assumptions based on the diagnostic plots. 
+
+```{r fig.height= 6, fig.width=10}
+par(mfrow = c(2,2))
+plot(model2, which = c(1,2,5),
+     caption = list("Residuals vs Fitted values", "Normal QQ-plot", "Residuals vs Leverage"))
+```
+Description: 
+
+       a. Residuals vs fitted plot shows that the data points are randomly scattered around the dotted line of y = 0, and the fitted line (red) is roughly horizontal without distinct patterns or trends, indicating a linear relationship. The linearity assumption of linear regression is examined. 
+       
+       b. The QQ plot shows that most of the points plotted on the graph lies on the dashed straight line, except for the lower and upper ends, where some points deviated from the line, indicating the distribution might be slightly skewed. Nevertheless, the assumption of normality can be approximately met, considering that in large sample size, the assumption of linearity is almost never perfectly met. 
+       
+       c. The Residuals vs Leverage plot indicates that there is no three outlier observation with large Cook’s distances. If the plot shows any outlier observation, they are recommended to be removed from the data because they have high influence in the linear model. 
