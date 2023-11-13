@@ -31,6 +31,7 @@ Show a graphical overview of the data and show summaries of the variables in the
 library(ggplot2)
 library(GGally)
 
+# For making a nicer plot
 my_lower <- function(data, mapping, ...) {
   ggplot(data = data, mapping=mapping) +
     geom_point(..., alpha=1, pch = 21, color ="black") +
@@ -63,6 +64,8 @@ my_upper_combo<- function(data, mapping, ...) {
       panel.background = element_rect(fill = "white", color = "black")
     )
 }
+
+# Plot
 p <- ggpairs(students2014, 
              mapping = aes(col = gender, fill = gender, alpha = 0.7), 
              lower = list(
@@ -77,8 +80,6 @@ p <- ggpairs(students2014,
                combo = my_upper_combo,
                continuous = wrap("cor", color = "black")
              )
-             
-             #lower = list(combo = wrap("facethist", bins = 20))
              )+
   scale_fill_manual(values = c("lightblue", "wheat"))+
   scale_color_manual(values = c("lightblue", "wheat"))
@@ -133,8 +134,7 @@ Produce the following diagnostic plots: Residuals vs Fitted values, Normal QQ-pl
 
 ```{r fig.height= 6, fig.width=10}
 par(mfrow = c(2,2))
-plot(model2, which = c(1,2,5),
-     caption = list("Residuals vs Fitted values", "Normal QQ-plot", "Residuals vs Leverage"))
+plot(model2, which = c(1,2,5))
 ```
 Description: 
 
