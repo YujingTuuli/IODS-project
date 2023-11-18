@@ -202,11 +202,12 @@ loss_func <- function(class, prob) {
 loss_func(class = alc$high_use, prob = alc$probability)
 # K-fold cross-validation
 library(boot)
+set.seed(1)
 cv <- cv.glm(data = alc, cost = loss_func, glmfit = model, K = 10)
 # average number of wrong predictions in the cross validation
 cv$delta[1]
 ```
-The prediction error rate is 24%, outperforming the model in Exercise Set 3, which had about 26% error. According to the result of 10 fold cross-validation, the model has an average error rate of 24%, same as the results from training model.
+The prediction error rate is 24%, outperforming the model in Exercise Set 3, which had about 26% error. According to the result of 10 fold cross-validation, the model has an average error rate of 23.5%, a bit lower than the results from training model.
 
 ## 7 The relationship between prediction error and number of predictors (super bonus)
 
