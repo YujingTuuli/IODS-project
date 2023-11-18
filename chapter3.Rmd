@@ -1,0 +1,216 @@
+---
+title: "chapter 3"
+output: html_document
+date: "2023-11-17"
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Chapter 3: Logistic Regression
+
+```{r}
+date()
+```
+
+## 1 Read the data
+
+```{r}
+library(dplyr)
+library(readr)
+# read the data
+alc <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/alc.csv", sep=",", header=TRUE)
+# print out the names of the variables
+colnames(alc)
+dim(alc)
+glimpse(alc)
+```
+
+This data set includes the information of 370 students' background, achievement, and alcohol consumption in two Portuguese schools.
+There are 35 variables in the data, including student grades, demographic, social and school related features, as well as students' performance in Mathematics (mat) and Portuguese language (por).
+The data was collected by using school reports and questionnaires.
+
+## 2 Hypothesis
+
+*The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption.*
+
+Based on my everyday observation and some research reports about teenagers' alcohol consumpution, I would like to choose family relationships ("famrel"), number of school absences ("absences"), weekly study time ("studytime") and frequency of going out with friends ("goout") as candidate indicators to predict the alcohol consumption.
+Htpothesis: a student belongs to the group of high alcohol consumption if he or she (1) has low quality family relationship; (2) more frequency of school absences; (3) less weekly study time; and (4) more frequency of going out with friends.
+
+## 3 The distribution of the chosen variables and their relationships with alcohol consumption
+
+*Numerically and graphically explore the distributions of your chosen variables and their relationships with alcohol consumption (use for example cross-tabulations, bar plots and box plots). Comment on your findings and compare the results of your exploration to your previously stated hypotheses.*
+
+### 3.1 The distribution of the chosen variables
+
+```{r}
+library(ggplot2)
+library(tidyr)
+
+alc |> 
+  select(absences, studytime, famrel, goout) |> 
+  pivot_longer(everything(), 
+               names_to = "variable", 
+               values_to = "value") |> 
+  ggplot(aes(x = value))+
+  facet_wrap(~variable, scales = "free")+
+  geom_bar()+
+  labs(title = "Distribution of the interested variables",
+       x  = "Values of each variable",
+       y = "Frequency")
+```
+
+(1) The distribution of "absences" is skewed to right with very long tail. This indicates that most students have full or almost full attendance of class, while a small number of students might be absent for quite a number of classes.
+(2) Other three variables are obtained by item with Likert-marks, with labeling value ranging from 1 to 5. For family relationship quality, it is found most students having good or very good family relationship quality, with more around 2/3 of them being at the high end the choices.
+(3) It is found most students tend to be very social to spend much time going out with friends.
+(4) For study time, most students spend 2 to 5 hours in a week studying, and very few of them spend more than 10 hours a week in studying.
+
+### 3.2 The relationships between interesting variables and alcohol consumption
+
+```{r fig.height= 6, fig.width=11}
+# The relationship between students' absences of class and alcohol consumption (box plot for numerical~categorical variables)
+p1 <- alc |> 
+  ggplot(aes(x = high_use, y = absences)) +
+  geom_boxplot() +
+  geom_jitter(width=0.25, alpha=0.5)+
+  labs(x = "Alcohol consumption", 
+       y = "Freuqncy of class absences",
+       title = 
+         "Frequency of class absences and alcohol consumption")+
+  scale_x_discrete(labels = c("FALSE" = "Non-high-user", 
+                              "TRUE" = "high-user"))
+p1 
+
+# The relationship between quality of family relation and alcohol consumption (bar plot for categorical variables)
+p2 <- alc |> 
+  ggplot(aes(x = factor(famrel), fill = high_use)) +
+  geom_bar(position = "fill", color = "black") +
+  labs(x = "Quality of family relationships", 
+       y = "Proportion of alcohol high-users",
+       title = 
+         "Quality of family relationships and alcohol consumption")+
+  guides(fill=guide_legend("Alcohol consumption"))+
+  scale_fill_discrete(labels = c("FALSE" = "Non-high-user", 
+                                 "TRUE" = "high-user"))
+p2
+
+# The relationship between going out with friends and alcohol consumption (bar plot for categorical variables)
+p3 <- alc |> 
+  ggplot(aes(x = factor(goout), fill = high_use)) +
+  geom_bar(position = "fill", color = "black") +
+  labs(x = "Going out with friends", 
+       y = "Proportion of alcohol high-users",
+       title = 
+         "Going out with friends and alcohol consumption")+
+  guides(fill=guide_legend("Alcohol consumption"))+
+  scale_fill_discrete(labels = c("FALSE" = "Non-high-user", 
+                                 "TRUE" = "high-user"))
+p3
+
+# The relationship between weekly study time and alcohol consumption (bar plot for categorical variables)
+p4 <- alc |> 
+  ggplot(aes(x = factor(studytime), fill = high_use)) +
+  geom_bar(position = "fill", color = "black") +
+  labs(x = "Weekly study time", 
+       y = "Proportion of alcohol high-users",
+       title = 
+         "Weekly study time and alcohol consumption")+
+  guides(fill=guide_legend("Alcohol consumption"))+
+  scale_fill_discrete(labels = c("FALSE" = "Non-high-user", 
+                                 "TRUE" = "high-user"))
+p4
+
+# combining four plots together
+library(patchwork)
+p1 + p2 + p3 + p4
+```
+
+Four plots were made to explore the relationships between four variables and the alcohol consumption.
+(1) The box plot shows that the frequency and median(Q1,Q3) of class absences differed greatly between alcohol high-users and non-high-users.
+The students with high alcohol use are associated with more class absences, as hypothesized.
+(2) The first bar plot shows a difference result from the hypothesis in terms of the relationship between quality of family relation and alcohol consumption.
+Students who have worst relationship with their family are not the highest consumption group.
+Rather the students who consume most alcohol are those who have bad or middle level of family relationship.
+(3) The second bar plot shows that the more frequency students going out with their friends, the more alcohol consumption, as hypothesized.
+(4) The third bar plot shows that the more time students spend in studying every week, that less alcohol consumption, as hypothesized.
+
+## 4 Logistic regression
+
+*Use logistic regression to statistically explore the relationship between your chosen variables and the binary high/low alcohol consumption variable as the target variable. Present and interpret a summary of the fitted model. Present and interpret the coefficients of the model as odds ratios and provide confidence intervals for them. Interpret the results and compare them to your previously stated hypothesis. Hint: If your model includes factor variables, see for example the RHDS book or the first answer of this stack exchange thread on how R treats and how you should interpret these variables in the model output (or use some other resource to study this).*
+
+```{r}
+# Fit the model base on the original hypothesis
+model <- glm(high_use ~ absences + famrel + goout + studytime, data = alc, family = "binomial")
+summary(model)
+# Important parameters
+OR <- coef(model)
+CI <- confint(model)
+ORCI <- cbind(OR, CI)
+print(ORCI, digits = 1)
+```
+
+All of the hypothesized predictors have good level of statistical significance in the model (p\<0.01), indicating that all of the four hypothesized predictors are significant in predicting alcohol consumption.
+These four predictors have different influences on alcohol consumption.
+(1) Absences: Participants who have one more time of absence from class will on average have 0.067 (95%CI: 0.02\~0.11) times more odds being an alcohol high-user.
+(2) Quality of family relationships: Every unit of family relationship quality increase would lead to 0.36 (95%CI: 0.09\~0.63) times less odds being alcohol high-user.
+(3) Going out with friends: Students who have one more level of social involvement with their friends have 0.76 (95%CI: 0.53\~1.01) times more odds of being alcohol high-users.
+(4) Weekly study time: Those who have one more level of weekly study time have on average 0.57 (95%CI: 0.25\~0.92) times less odds to be an alcohol high-user.
+These findings are consistent with previous hypotheses.
+
+## 5 Predicted probabilities and cross tabulation
+
+*Using the variables which, according to your logistic regression model, had a statistical relationship with high/low alcohol consumption, explore the predictive power of you model. Provide a 2x2 cross tabulation of predictions versus the actual values and optionally display a graphic visualizing both the actual values and the predictions. Compute the total proportion of inaccurately classified individuals (= the training error) and comment on all the results. Compare the performance of the model with performance achieved by some simple guessing strategy.*
+
+```{r}
+# Explore the predictive power of the model
+probabilities <- predict(model, type = "response")
+# Add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+# Use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probability > 0.5)
+# See the last ten original classes, predicted probabilities, and class predictions
+select(alc, absences, famrel, goout, studytime, high_use, probability, prediction) %>% tail(10)
+# Tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)%>% 
+  addmargins
+
+# Display a graphic visualizing actual high_use and predictions
+p5 <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))+
+  geom_point()
+p5
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)%>%
+  prop.table()%>%
+  addmargins()%>%
+  print(digits = 2)
+
+```
+
+Among 259 participants who are not alcohol high-users, the model correctly predicts 233 (90%) of them. Among 111 participants who are alcohol high-users, the model correctly predicts 63 of them (57%) of them. In all, among the 370 predicts, 74 (20%) were inaccurate.
+
+## 6 10-fold cross-validation (bonus)
+
+*Bonus: Perform 10-fold cross-validation on your model. Does your model have better test set performance (smaller prediction error using 10-fold cross-validation) compared to the model introduced in the Exercise Set (which had about 0.26 error). Could you find such a model?*
+
+```{r}
+# Define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+# Call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)
+# K-fold cross-validation
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = model, K = 10)
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```
+The prediction error rate is 24%, outperforming the model in Exercise Set 3, which had about 26% error. According to the result of 10 fold cross-validation, the model has an average error rate of 24%, same as the results from training model.
+
+## 7 The relationship between prediction error and number of predictors (super bonus)
+
+*Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors). Start with a very high number of predictors and explore the changes in the training and testing errors as you move to models with less predictors. Draw a graph displaying the trends of both training and testing errors by the number of predictors in the model.*
+
+```{r}
+```
