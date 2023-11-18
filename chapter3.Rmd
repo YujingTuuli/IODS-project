@@ -26,8 +26,8 @@ dim(alc)
 glimpse(alc)
 ```
 
-This data set includes the information of 370 students' background, achievement, and alcohol consumption in two Portuguese schools.
-There are 35 variables in the data, including student grades, demographic, social and school related features, as well as students' performance in Mathematics (mat) and Portuguese language (por).
+This data set includes the information of <span style="color: red;">**`r dim(alc)[1]`**</span> students' background, achievement, and alcohol consumption in two Portuguese schools.
+There are  <span style="color: red;">**`r dim(alc)[2]`**</span> variables in the data, including student grades, demographic, social and school related features, as well as students' performance in Mathematics (mat) and Portuguese language (por).
 The data was collected by using school reports and questionnaires.
 
 ## 2 Hypothesis
@@ -186,7 +186,9 @@ table(high_use = alc$high_use, prediction = alc$prediction)%>%
 
 ```
 
-Among 259 participants who are not alcohol high-users, the model correctly predicts 233 (90%) of them. Among 111 participants who are alcohol high-users, the model correctly predicts 63 of them (57%) of them. In all, among the 370 predicts, 74 (20%) were inaccurate.
+Among 259 participants who are not alcohol high-users, the model correctly predicts 233 (90%) of them.
+Among 111 participants who are alcohol high-users, the model correctly predicts 63 of them (57%) of them.
+In all, among the 370 predicts, 74 (20%) were inaccurate.
 
 ## 6 10-fold cross-validation (bonus)
 
@@ -205,9 +207,11 @@ library(boot)
 set.seed(1)
 cv <- cv.glm(data = alc, cost = loss_func, glmfit = model, K = 10)
 # average number of wrong predictions in the cross validation
-cv$delta[1]
+delta.percent <- paste0((cv$delta[1]|> round(4))*100, "%") 
 ```
-The prediction error rate is 24%, outperforming the model in Exercise Set 3, which had about 26% error. According to the result of 10 fold cross-validation, the model has an average error rate of 23.5%, a bit lower than the results from training model.
+
+The prediction error rate is 24%, outperforming the model in Exercise Set 3, which had about 26% error.
+According to the result of 10 fold cross-validation, the model has an average error rate of `r delta.percent`, a bit lower than the results from training model.
 
 ## 7 The relationship between prediction error and number of predictors (super bonus)
 
