@@ -82,7 +82,6 @@ From the distribution plot, most of the variables are skewed to right or left di
 
 *Standardize the dataset and print out summaries of the scaled data. How did the variables change? Create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). Use the quantiles as the break points in the categorical variable. Drop the old crime rate variable from the dataset. Divide the dataset to train and test sets, so that 80% of the data belongs to the train set.*
 
-
 ### 3.1 Standardize the dataset
 ```{r}
 # Center and standardize variables
@@ -196,7 +195,7 @@ The cross tabulated results show that most of the predictions on the classes of 
 
 ```{r}
 data("Boston")
-boston_scaled <- scale(Boston) |> 
+boston_scaled2 <- scale(Boston) |> 
   as.data.frame()
 ```
 
@@ -204,7 +203,7 @@ boston_scaled <- scale(Boston) |>
 
 ```{r}
 # Euclidean distances matrix
-dist_eu <- dist(boston_scaled)
+dist_eu <- dist(boston_scaled2)
 
 # Look at the summary of the distances
 summary(dist_eu)
@@ -217,7 +216,7 @@ set.seed(123)
 k_max <- 10
 
 # Calculate the total within sum of squares
-twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled2, k)$tot.withinss})
 
 # Visualize the results
 qplot(x = 1:k_max, y = twcss, geom = 'line')
@@ -228,12 +227,12 @@ The optimal number of clusters is when the value of total WCSS changes radically
 
 ```{r fig.height= 6, fig.width=10}
 # K-means clustering with 2 clusters
-km <- kmeans(boston_scaled, centers = 2)
+km <- kmeans(boston_scaled2, centers = 2)
 
 # Plot the scaled Boston dataset with clusters
-pairs(boston_scaled, col = km$cluster)
-pairs(boston_scaled[1:7], col = km$cluster)
-pairs(boston_scaled[8:14], col = km$cluster)
+pairs(boston_scaled2, col = km$cluster)
+pairs(boston_scaled2[1:7], col = km$cluster)
+pairs(boston_scaled2[8:14], col = km$cluster)
 ```
 Most of the variables are influential linear separators for the clusters, except rad, ptratio, and tax.
 
