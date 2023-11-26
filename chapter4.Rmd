@@ -98,23 +98,23 @@ After scaling the data, all the means of the variables turn to zero. Most of the
 
 ```{r}
 # Summary of the scaled crime rate
-summary(bosten_scaled$crim)
+summary(boston_scaled$crim)
 
 # Create a quantile vector of crim
-bins <- quantile(bosten_scaled$crim)
+bins <- quantile(boston_scaled$crim)
 
 # Create a categorical variable 'crime'
-crime <- cut(bosten_scaled$crim, breaks = bins, include.lowest = TRUE,
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE,
              labels = c("low", "med_low","med_high", "high"))
 
 # Look at the table of the new factor crime
 table(crime)
 
 # Remove original crim from the dataset
-boston_scaled <- dplyr::select(bosten_scaled, -crim)
+boston_scaled <- dplyr::select(boston_scaled, -crim)
 
 # Add the new categorical value to scaled data
-boston_scaled <- data.frame(bosten_scaled, crime)
+boston_scaled <- data.frame(boston_scaled, crime)
 ```
 
 ### 3.3 Divide the dataset to train and test sets
@@ -195,7 +195,7 @@ The cross tabulated results show that most of the predictions on the classes of 
 
 ```{r}
 data("Boston")
-boston_scaled2 <- scale(Boston) |> 
+boston_scaled <- scale(Boston) |> 
   as.data.frame()
 ```
 
@@ -203,7 +203,7 @@ boston_scaled2 <- scale(Boston) |>
 
 ```{r}
 # Euclidean distances matrix
-dist_eu <- dist(boston_scaled2)
+dist_eu <- dist(boston_scaled)
 
 # Look at the summary of the distances
 summary(dist_eu)
@@ -216,7 +216,7 @@ set.seed(123)
 k_max <- 10
 
 # Calculate the total within sum of squares
-twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled2, k)$tot.withinss})
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
 
 # Visualize the results
 qplot(x = 1:k_max, y = twcss, geom = 'line')
@@ -227,12 +227,12 @@ The optimal number of clusters is when the value of total WCSS changes radically
 
 ```{r fig.height= 6, fig.width=10}
 # K-means clustering with 2 clusters
-km <- kmeans(boston_scaled2, centers = 2)
+km <- kmeans(boston_scaled, centers = 2)
 
 # Plot the scaled Boston dataset with clusters
-pairs(boston_scaled2, col = km$cluster)
-pairs(boston_scaled2[1:7], col = km$cluster)
-pairs(boston_scaled2[8:14], col = km$cluster)
+pairs(boston_scaled, col = km$cluster)
+pairs(boston_scaled[1:7], col = km$cluster)
+pairs(boston_scaled[8:14], col = km$cluster)
 ```
 Most of the variables are influential linear separators for the clusters, except rad, ptratio, and tax.
 
@@ -258,6 +258,7 @@ p3 <- plot_ly(x = matrix_product$LD1,
         type= 'scatter3d', 
         mode='markers',
         size = 2)
+p3
 
 # Draw another 3D plot where the color is defined by the clusters of the k-means
 # Get the clusters of k-means for the train set
@@ -270,6 +271,7 @@ p4 <- plot_ly(x = matrix_product$LD1,
         mode='markers', 
         color = factor(train.km$cluster), #color defined by clusters of the k-means
         size = 2)
+p4
 
 ```
 The LDA was trained according to a mathematical category of crime rates (quantiles), which has four categories. While k = 2 was adopted for the k-means clustering base on the size of within-cluster sum of square. Since LDA is a supervised technique, we know what are each categories represent, which are also labeled in the caption. K-means clustering is a unsupervised method and thus I do not know anything about the real-world representation of the 2 clusters identified before observing closely. However, by observing the 3D plots together, it is interesting to find out that, cluster 2 from k-means nicely overlaps with high category from LDA. Also, cluster 1 from k-means roughly overlaps with the other three categories from LDA.
