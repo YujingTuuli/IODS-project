@@ -1,0 +1,377 @@
+---
+title: "chapter6"
+output: html_document
+date: "2023-12-09"
+---
+
+# Chapter 6: Analysis of longitudinal data
+
+```{r}
+date()
+```
+
+*1. Implement the analyses of Chapter 8 of MABS, using the R codes of Exercise Set 6: Meet and Repeat: PART I but using the RATS data (from Chapter 9 and Meet and Repeat: PART II).*
+
+*2. Implement the analyses of Chapter 9 of MABS, using the R codes of Exercise Set 6: Meet and Repeat: PART II, but using the BPRS data (from Chapter 8 and Meet and Repeat: PART I).*
+
+## 1 Load the wrangled data
+
+```{r}
+library(tidyverse)
+# Load the data from the assignment of data wrangling, including BPRS data and RATS data
+source("meet_and_repeat.r")
+```
+
+## 2 Analysis: PART I (RATS data)
+
+```{r}
+# Check the content of the data
+names(RATS)
+str(RATS)
+summary(RATS)
+names(RATSL)
+str(RATSL)
+summary(RATSL)
+```
+
+Description of the RATS data: There are 16 rats in this nutrition study which named with ID from 1 to 16. These 16 rats were divided into three treatment groups. Group 1 includes eight rat, while Group 2 and Group 3 respectively have four rats. All these 16 rats in three treatment groups took 11 repeated measurements, resulting in 176 (16x11) unique observations. Three groups were put on different diets, and each rat’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period. The question of most interest is whether the growth profiles of the three groups differ.
+
+### 2.1 Individuals on the plot
+
+```{r}
+# Plot the weights of all the observation over the time in a plot, differentiating three treatment groups.
+library(ggplot2)
+RATSL |> 
+  ggplot(aes(x = time, y = Weight, group = ID, color = Group))+
+  geom_line()+
+  geom_point()+
+  labs(title = "Change of weight in three treatment groups",
+       x = "Time (days)",
+       y = "Weight (grams)")+
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        panel.grid.major = element_line(color = "grey", size = 0.2),
+        panel.grid.minor = element_line(color = "grey", size = 0.2),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =10, 
+                                  color = "white"),
+        legend.position = "none")+
+  facet_wrap(~Group)
+```
+
+Findings:
+1. All individuals increased weights over the time.
+2.The rats of the Group 1 are far lighter than the rats in Group 2 and 3. The rats in Group 2 and 3 have similiar level of weights, comparing to Group 1.
+
+### 2.2 Standardization
+
+In order to reduce the influence of the original weight in tracking the changes over the time, we can standardized the observed values (weights) of each observation, i.e., $$standardised(x) = \frac{x - mean(x)}{ sd(x)}$$
+
+```{r}
+# Standardise the variable weight
+RATSL <- RATSL |> 
+  group_by(time) |> 
+  mutate(stdwgt =  (Weight - mean(Weight))/sd(Weight))  |> 
+  ungroup()
+glimpse(RATSL)
+
+# Plot again with the standardised weight
+RATSL |> 
+  ggplot(aes(x = time, y = stdwgt, group = ID, color = Group))+
+  geom_line()+
+  geom_point()+
+  labs(title = "Change of standardised weight in three treatment groups",
+       x = "Time (days)",
+       y = "Standardized weight")+
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        panel.grid.major = element_line(color = "grey", size = 0.2),
+        panel.grid.minor = element_line(color = "grey", size = 0.2),
+        strip.background = element_rect(color = "black",#adjust the strips aes
+                                        fill = "steelblue"),
+        strip.text = element_text(size =10, 
+                                  color = "white"),
+        legend.position = "none")+
+  facet_wrap(~Group)
+```
+
+Findings: The changes of the weight look not so obvious over the time for all the individual rats.
+
+
+### 2.3 Summary graphs with standard error
+
+In addition to displaying the individual profiles, another approach is showing **average (mean)** and **standard error of mean** profiles for each treatment group along with some indication of the variation of the observations at each time point. $$se = \frac{sd(x)}{\sqrt{n}}$$
+
+```{r}
+# Summary data with mean and standard error of rats by group and time
+rats.group <- RATSL |> 
+  group_by(Group, time) |> 
+  summarise(mean = mean(Weight),se = sd(Weight)/sqrt(n())) |> 
+  ungroup()
+glimpse(rats.group)
+
+# Plot the mean profiles of the groups over the time
+library(ggplot2)
+
+rats.group |> 
+  ggplot(aes(x = time, 
+             y = mean, 
+             shape = Group,
+             color = Group))+
+  geom_line()+
+  geom_point(size=3)+
+  theme(legend.position = c(0.9,0.5),
+        panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        panel.grid = element_line(color = "grey",
+                                  size = 0.1),
+        axis.text = element_text(size = 10),
+        axis.title = element_text (size = 13),
+        plot.title = element_text(size = 15,
+                                  face = "bold")) + 
+  labs(title = "Change of average weight of three groups over the time",
+       x = "Time(days)",
+       y = "Average(grams)")+
+  scale_color_manual(values = c("wheat4", "steelblue", "darkred"))
+
+# Add error bar (mean±2se) to the plot
+## Create an object that saves dodge position so that point and line dodge simultaneously (for preventing overlap)
+dodgeposition <- position_dodge(width = 0.3)
+
+rats.group |> 
+  ggplot(aes(x = time, 
+             y = mean, 
+             shape = Group,
+             color = Group))+
+  geom_line(position = dodgeposition) + #dodge to avoid overlap
+  geom_point(size=3, position = dodgeposition) +#dodge to avoid overlap
+  geom_errorbar(aes(ymin=mean-2*se, ymax=mean+2*se), 
+                width=0.5, #set width of error bar
+                position =dodgeposition) +#dodge to avoid overlap
+  theme(legend.position = c(0.9,0.5),
+        panel.background = element_rect(fill = "white",
+                                        color = "black"),
+        panel.grid = element_line(color = "grey",
+                                  size = 0.1),
+        axis.text = element_text(size = 10),
+        axis.title = element_text (size = 13),
+        plot.title = element_text(size = 15,
+                                  face = "bold")) + 
+  labs(title = "Change of weight statistics (mean±2se) of three groups over time",
+       x = "Time(days)",
+       y = "Average weight±2se(grams)")+
+  scale_color_manual(values = c("wheat4", "steelblue", "darkred"))
+
+```
+
+Findings:
+1. The average weights of each group increased with mild slopes over the time.
+2. The average weights of the rats among the groups: Group 3 > Group 2 > Group 1.
+3. According to the error bar (no overlap between Group 1 and Group 2,3), rats differed tremendously in weight from the very outset and kept the significant group difference over the time.
+
+### 2.4 Find and remove the outlier
+
+```{r}
+# Create a summary data by groups and subject with mean as the summary variable (ignoring baseline WD1, "RATSL_nobase")
+library(dplyr)
+RATSL_nobase <- RATSL |> 
+  filter(time > 1) |> 
+  group_by(Group, ID) |> 
+  summarise(mean=mean(Weight) ) |> 
+  ungroup()
+glimpse(RATSL_nobase)
+
+# Draw a boxplot of the mean versus groups
+library(ggplot2)
+RATSL_nobase |> 
+  ggplot(aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "red") +
+  scale_y_continuous(name = "mean(weight(g)), time 8-64")
+
+# Find and filter the outliners
+
+## Create a function that detect outliers
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+
+## Mutate a new variable "outlier" to tag outlier weight
+ratsl_outl <- RATSL_nobase|>  
+  group_by(Group) |>  
+  mutate(outlier = ifelse(is_outlier(mean), ID, as.factor(NA))) #create outlier label
+
+## Find the outlier in the boxplot
+ratsl_outl |> 
+  ggplot(aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "red") +
+  scale_y_continuous(name = "mean(weight(g)), time 8-64")+
+  geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3)
+
+## Filter the outlier ("RATSL_nobase1") and adjust the ggplot code the draw the plot again with the new data
+RATSL_nobase1 <- ratsl_outl |> 
+  filter(is.na(outlier))
+
+ggplot(RATSL_nobase1, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "red") +
+  scale_y_continuous(name = "mean(weight(g)), time 8-64")
+
+```
+
+After removing the outliers, IQRs are much narrower than those before removing the outliers.
+
+### 2.5 Differences across groups: ANOVA and linear model
+
+Apply ANOVA to assess any difference among three treatment groups. Use the data without the outliers.
+
+```{r}
+anova <- aov(mean ~ Group, data = RATSL_nobase1)
+summary(anova)
+```
+
+The p-value < 0.05 indicates that there are differences in the means of weights across three groups. In order to know which pair(s) of groups have significant difference, apply pairwise T-Test between groups.
+
+```{r}
+pairT <- TukeyHSD(anova)
+print(pairT)
+```
+
+There are statistically significant differences (p < 0.0001) between each pair of groups. But we don't know whether these differences are only due to the differences across groups, or also due to the differences in the baseline. Thus, linear regression with baseline as a new variance can help us to find the influence of baseline in the mean differences across groups.
+
+```{r}
+# Add the baseline from the original data as a new variable to the summary data
+RATSL_baseline <- inner_join(RATSL_nobase1, RATS, by = c("Group","ID")) |> 
+  select(Group, ID, mean, WD1) |> 
+  mutate(baseline = WD1)
+
+# Fit the linear model with the mean as the response 
+fit <- lm(mean ~ Group + baseline, data = RATSL_baseline)
+summary(fit)
+
+# Compute the analysis of variance table for the fitted model with anova()
+anova(fit)
+```
+
+Baseline has no significant effect on the mean differences across groups. 
+After adjusting with baseline effect, the mean differences across groups are still significant (p<0.05). 
+
+## 3 Analysis: PART II (BPRS data)
+
+```{r}
+# Check the content of the data
+names(BPRS)
+str(BPRS)
+summary(BPRS)
+names(BPRSL)
+str(BPRSL)
+summary(BPRSL)
+```
+
+Description of the BPRS data: There are 40 males in this study and they were divided into two treatment groups. Each group has 20 males, i.e. the subject from 1 to 20. Each subject was rated on the brief psychiatric rating scale (BPRS) measured before treatment began (week 0) and then at weekly intervals for eight weeks. The BPRS assesses the level of 18 symptom constructs such as hostility, suspiciousness, hallucinations and grandiosity; each of these is rated from one (not present) to seven (extremely severe). The scale is used to evaluate patients suspected of having schizophrenia. This study applies the **linear mixed effects models** to study the effects of different treatments on the BPRS rating over the time, with the consideration of the variability across the individuals in the groups.
+
+### 3.1 Plot the data
+
+To begin, plot both treatment effects over weeks by individuals, but ignoring the longitudinal nature (repeated-measures structure) of the data.
+
+```{r}
+library(ggplot2)
+ggplot(BPRSL, aes(x = week, y = bprs, group = subject, color = subject)) +
+  geom_line()+
+  facet_wrap(~treatment)+
+  theme(legend.position = "none",
+        panel.grid = element_line(color = "grey", size = 0.1),
+        panel.background = element_rect(color = "black",
+                                        fill = "white"),
+        strip.background = element_rect(color = "black",
+                                        fill = "steelblue"),
+        strip.text = element_text(color = "white",
+                                  face = "bold",
+                                  size = 10),
+        axis.title  = element_text(size = 12),
+        axis.text = element_text(size = 10))+
+  labs(title = "Two treatment effects on BPRS over week by individuals",
+       x = "Time (weeks)",
+       y = "BPRS rating")
+```
+
+Findings:
+1. The BPRS rating of the participants decreased in both treatment groups over the time. 
+2. The changing trajectories and the starting points across individuals differed greatly. 
+3. It can not be straightforward to see which treatment is better.
+
+### 3.2 Multiple linear regression
+
+Continuing to ignore the repeated-measures structure of the data, fit a multiple linear regression model with BPRS rating as response and `Time(weeks)` and `Treatment` as explanatory variables.
+
+```{r}
+BPRS_reg <- lm(bprs ~ week + treatment, data = BPRSL)
+summary(BPRS_reg)
+confint(BPRS_reg)
+```
+
+From the p values, time(week) is significant factor of the BPRS rating, but treatment does not significant influence on the rating. For every new week, they on average experienced an decrease of rating by 2.27 (95%CI -2.77 to -1.77) from the previous one. 
+
+### 3.3 The Random Intercept Model
+
+The previous model assumes independence of the repeated measures of rating, and this assumption is highly unlikely. To conduct the more formal analysis of the BPRS rating data, we will first fit the random intercept model for the same two explanatory variables: `Time(weeks)` and `Treatment`. Fitting a random intercept model allows the linear regression fit by considering that subjects have different rating baselines, which referred to the random intercept for each individual.
+
+However, in the BPRSL data, various subjects in both treatments use number 1 to 20, which means the same subject number refers to two different individuals receiving two treatments. This will cause problem in the mixed-effect modeling since the subject will be included in model. So we need to convert the subject numbers first.
+
+```{r}
+library(dplyr)
+BPRSL_new <- BPRSL |> 
+  mutate(subject = as.numeric(subject)) |>  
+  mutate(subject = ifelse(treatment ==2, subject + 20, subject))
+glimpse(BPRSL_new)
+```
+
+Now fit the random intercept model.
+
+```{r}
+library(lme4)
+BPRS_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL_new, REML = FALSE)
+summary(BPRS_ref)
+confint(BPRS_ref)
+```
+
+The fixed effect part of model summary here shows same results of coefficient with multiple linear regression in 3.2. We focus more on the random effect part of the model summary. On average (see Std.Dev. of subject), BPRS rating bounces around 9.87 (95%CI: 41.74 to 51.16) as moving from one participant to another. In fact, the influence of individual differences is even larger than the effect of time - the significant predictor evidenced in the fixed linear model (coefficient -2.27, 95%CI: -2.56 to -1.97).
+
+### 3.4 Random Intercept and Random Slope Model
+
+Fitting a random intercept and random slope model allows the linear regression fits for each individual to differ in intercept but also in slope. So it is possible to account for the individual differences in the BPRS rating profiles, but also the effect of time and treatment.
+
+```{r}
+BPRS_refboth <- lmer(bprs ~  week + treatment + (treatment | subject), 
+                  data = BPRSL_new, 
+                  REML = FALSE)
+summary(BPRS_refboth)
+```
+
+We focus more on the random effect part as well here. On average, BPRS rating bounces around 8.027 (see Std.Dev. of subject) as moving from one participant to another, lower than in random intercept model. The deviation for the treatment is 7.58, much higher than in fixed effect model (even it shows insignificant). This indicates as the changing of individuals, the effect of a different treatment could be huge, and this is an important finding since this shed some lights on why a different treatment does not show significantly different effect.
+
+In a word, the individual differences have a great effect on the BPRS rating, even larger than the effect of time and treatment; and the individual differences also have great effect on the reaction to different treatments.
+
+### 3.5 Random Intercept and Random Slope Model with interaction
+
+Fitting a random intercept and slope model that allows for a group × time interaction as a final work.
+
+```{r}
+BPRS_interact <- lmer(bprs ~  week * treatment + (treatment | subject), 
+                  data = BPRSL_new, 
+                  REML = FALSE)
+summary(BPRS_interact)
+```
+
+```{r}
+# Perform an ANOVA test on the two models
+anova(BPRS_refboth, BPRS_interact)
+```
+
+Paying attention to the likelihood ratio test chi-squared value and the according p-value. The lower the value the better the fit against the comparison model. It can be seen that the interaction between week and treatment is significant.
+
+
