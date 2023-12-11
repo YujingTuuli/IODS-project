@@ -11,22 +11,22 @@ date()
 ```
 The text continues here.
 
-## 1. Some thoughts about this course
+## 1 Some thoughts about this course
 *e.g., How are you feeling right now? What do you expect to learn? Where did you hear about the course?*
 
 As an R beginners, I feel this course is very friendly. Both the instructions from the teacher and the book are clear enough for me to understand and move on easily. The learning curve looks smooth, and the instructions are also encouraging. All these provide confidence for a beginner.
 I have been impressed by the versatile and powerful usage of R, so I want to add it into my research tool box although my research currently does not involve it (potential in the future if I own the skill). In other words, learning R is my interest or hobby at this moment. It is always good to learn some fresh things in my spare time - R is the one recently!
 I heard about this course from my colleague who usually can make many impressive graphs with statistical data. He became really skillful in operating R and realizing many functions after one-year learning, starting from this course one year ago. His feedback on this course and the learning outcomes really encouraged me to get engaged into R from this course.
 
-## 2. Reflection on the book and the Exercise 1
+## 2 Reflection on the book and the Exercise 1
 *How did it work as a "crash course" on modern R tools and using RStudio? Which were your favorite topics? Which topics were most difficult? Some other comments on the book and our new approach of getting started with R Markdown etc.?*
 
 This book is clear, well instructional, and encouraging for an R beginner. I enjoy learning the part of data wrangling and visualization, which is easily accessible and readable. My favorite character of R is the instant feedback after executing the commands, no matter right or wrong. This is what a researcher is eager for, but seldom meets in the academic career after making some efforts. However, I could feel challenging in the data analysis which needs specialized knowledge in statistics to interpret the R outcomes. It could be easy to run the analysis functions but not easy to understand the meaning of the results. Therefore, more things should be learned when I move on to the data analysis in R. The book has provided so many instructions to go through and practice, which are clear to follow. I think it is very nice and enough for me to get start with R. Just need to spend time in it.
 
-## 3. Link to my GitHub repository
+## 3 Link to my GitHub repository
 <https://github.com/YujingTuuli/IODS-project>
 
-## 4. Describe the work I have done this week and summarize my learning
+## 4 Describe the work I have done this week and summarize my learning
 
 Following the detail instruction in "Start me up", I set up the technical platforms needed in this course, including R, RStudio, and GitHub. Following the teacher's instruction, I got the know how to push the updated script to the GitHub. Then I started the learning of R with the book "R for Health Data Science", and the corresponding exercise 1. In this week, I finished the learning of Chapter 1-5 in the book, which was a heavy and time-consuming task, but rewarding! In addition, I read the recommended Part 1 of the textbook "MABS4IODS", and the two webinars on RStudio and GitHub.
 
