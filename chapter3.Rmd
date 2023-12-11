@@ -67,7 +67,7 @@ alc |>
 
 ### 3.2 The relationships between interesting variables and alcohol consumption
 
-```{r fig.height= 6, fig.width=11}
+```{r}
 # The relationship between students' absences of class and alcohol consumption (box plot for numerical~categorical variables)
 p1 <- alc |> 
   ggplot(aes(x = high_use, y = absences)) +
@@ -119,7 +119,9 @@ p4 <- alc |>
   scale_fill_discrete(labels = c("FALSE" = "Non-high-user", 
                                  "TRUE" = "high-user"))
 p4
+```
 
+```{r fig.height= 6, fig.width=11}
 # combining four plots together
 library(patchwork)
 p1 + p2 + p3 + p4
