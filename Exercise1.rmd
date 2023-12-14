@@ -149,8 +149,8 @@ my_datetime
 # error that is explained in the book... (you may put '#' in front of it)
 my_datetime - current_datetime
 
-current_datetime  |>  class()
-my_datetime |>  class()
+current_datetime %>% class()
+my_datetime %>% class()
 ```
 
 2.2.4 continued...
@@ -163,7 +163,7 @@ my_datetime_converted
 my_datetime_converted - current_datetime
 
 my_datesdiff <- my_datetime_converted - current_datetime
-my_datesdiff  |>  class()
+my_datesdiff %>% class()
 
 ymd_hm("2021-01-02 12:00") + my_datesdiff
 
@@ -775,7 +775,7 @@ Look at Table 3.4 on page <https://argoshare.is.ed.ac.uk/healthyr_book/exercises
 ```{r}
 gbd_long <- read_csv("https://raw.githubusercontent.com/KimmoVehkalahti/RHDS/master/data/global_burden_disease_cause-year-sex.csv")
 
-# Solution: Use pivot_wider() to put the cause variable into columns using the deaths_millions as values:
+# Solution:
 
 gbd_long %>% 
   pivot_wider(names_from = cause, values_from = deaths_millions)
@@ -951,9 +951,7 @@ theme_set(theme_bw())
 
 ```{r}
 gapdata2007 %>% 
-  ggplot(aes(x = gdpPercap/1000, y = lifeExp, 
-             size = pop
-             )) +
+  ggplot(aes(x = gdpPercap/1000, y = lifeExp, size = pop)) +
   geom_point()
 
 gapdata2007 %>% 
@@ -992,33 +990,8 @@ gapdata %>%
 Try to transform the above graph following these instructions:
 
 -   Colour lines by continents: add colour = continent inside aes();
-```{r}
-gapdata %>% 
-  ggplot(aes(x = year, y = lifeExp, group = country, colour = continent)) +
-  geom_line()
-```
-
 -   Continents on separate facets: + facet_wrap(\~continent);
-```{r}
-gapdata %>% 
-  ggplot(aes(x = year, y = lifeExp, group = country, colour = continent)) +
-  facet_wrap(~continent)+
-  geom_line()
-```
-
 -   Use a nicer colour scheme: + scale_colour_brewer(palette = "Paired")
-```{r}
-gapdata %>% 
-  ggplot(aes(x = year,
-             y = lifeExp, 
-             group = country, 
-             colour = continent,
-             )) +
-  scale_colour_brewer(palette = "Paired")+ # Use a nicer colour scheme
-  facet_wrap(~continent)+
-  geom_line()
-```
-
 
 ## 4.6 Bar plots
 
@@ -1028,7 +1001,6 @@ gapdata %>%
 gapdata2007 %>% 
   filter(country %in% c("United Kingdom", "France", "Germany")) %>% 
   ggplot(aes(x = country, y = lifeExp)) +
-  coord_cartesian(ylim=c(79, 81))+ # to manipulate the scale into something a lot more dramatic.
   geom_col() 
 ```
 
@@ -1044,7 +1016,7 @@ gapdata2007 %>%
 
 gapdata2007 %>% 
   ggplot(aes(x = continent, colour = country)) +
-  geom_bar(fill = NA)+
+  geom_bar(fill = NA) +
   theme(legend.position = "none")
 ```
 
@@ -1061,17 +1033,8 @@ gapdata2007 %>%
 ### 4.6.5 Exercise
 
 Look at Figure 4.13 on the page <https://argoshare.is.ed.ac.uk/healthyr_book/bar-plots.html> and try to recreate it!
-Create Figure 4.13 of life expectancies in European countries (year 2007)
+
 ```{r}
-gapdata2007 |> 
-  filter(continent == "Europe") |> 
-  # x = country gets the country bars plotted in alphabetical order, use x = fct_reorder(country, lifeExp) still inside the aes() to order the bars by their lifeExp values.
-  ggplot(aes(x = fct_reorder(country, lifeExp),
-             y = lifeExp))+
-  # when using fill = NA, you also need to include a colour; we’re using colour = "deepskyblue" inside the geom_col()
-  geom_col(fill = NA, colour = "deepskyblue")+
-  #make the bars horizontal (it flips the x and y axes)
-  coord_flip()
 
 ```
 
@@ -1104,7 +1067,7 @@ gapdata2007 %>%
 gapdata2007 %>% 
   ggplot(aes(x = continent, y = lifeExp)) +
   geom_boxplot() +
-  geom_jitter() #this spreads the points out to reduce overplotting
+  geom_jitter()
 ```
 
 4.9 continued...
@@ -1120,8 +1083,7 @@ gapdata2007 %>%
 gapdata2007 %>% 
   ggplot(aes(x = continent, y = lifeExp)) +
   geom_boxplot() +
-  geom_jitter(aes(colour = continent), position = position_jitter(seed = 1))
-# the variation added by geom_jitter() is random, which means that when you recreate the same plots the points will appear in slightly different locations to ours. To make identical ones, add position = position_jitter(seed = 1) inside geom_jitter()
+  geom_jitter(aes(colour = continent))
 ```
 
 ### 4.9.1 Worked example - three geoms together
@@ -1147,39 +1109,6 @@ gapdata2007 %>%
 ```
 
 Try the suggested experiments given on page <https://argoshare.is.ed.ac.uk/healthyr_book/multiple-geoms-multiple-aes.html> with the R code above. (Copy-paste the above code chunk below to experiment with it!)
-```{r}
-label_data <- gapdata2007 %>% 
-  group_by(continent) %>% 
-  filter(lifeExp == max(lifeExp)) %>% 
-  select(country, continent, lifeExp)
-
-# since we filtered for lifeExp == max(lifeExp)
-# these are the maximum life expectancy countries at each continent:
-label_data
-
-# remove data = label_data, from geom_label() and you’ll get all 142 labels (so it will plot a label for the whole gapdata2007 dataset)
-gapdata2007 %>% 
-  ggplot(aes(x = continent, y = lifeExp)) +
-  geom_boxplot() +
-  geom_jitter(aes(colour = continent)) +
-  geom_label(aes(label = country))
-
-# change from geom_label() to geom_text() - it works similarly but doesn’t have the border and background behind the country name;
-gapdata2007 %>% 
-  ggplot(aes(x = continent, y = lifeExp)) +
-  geom_boxplot() +
-  geom_jitter(aes(colour = continent)) +
-  geom_text(data = label_data, aes(label = country))
-
-# change label = country to label = lifeExp, this plots the maximum value, rather than the country name.
-gapdata2007 %>% 
-  ggplot(aes(x = continent, y = lifeExp)) +
-  geom_boxplot() +
-  geom_jitter(aes(colour = continent)) +
-  geom_label(data = label_data, aes(label = lifeExp))
-
-```
-
 
 ## 4.10 All other types of plots
 
@@ -1437,8 +1366,7 @@ p19 <- p0 +
 
 p20 <- p0 +
   theme(legend.position      = c(1,0), #bottom-right corner
-        legend.justification = c(1,0)
-        ) 
+        legend.justification = c(1,0)) 
 
 p19 + labs(tag = "p19") + p20 + labs(tag = "p20")
 ```
